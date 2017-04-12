@@ -16,7 +16,7 @@ public class MainActivity extends AppCompatActivity {
     private Button[] buttake = new Button [butCalcu.length];  //建立连接运算键的按钮
     TextView tvResult = null;
     private String num1 = null, num2 = null, num3 = null;  //前两个为操作数，num3为结果
-    private int op1 = -1, op2 = -1;  //op1表示进行运算的种类，op2主要解决（数字）+（+、-、*、/）+（=）+（=）类计算
+    private int op1 = -1, op2 = -1 ,op3 = 0;  //op1表示进行运算的种类，op2主要解决（数字）+（+、-、*、/）+（=）+（=）类计算
     boolean isClickEqu = false;  //表示是否执行了（=）
     boolean isPoint = false;  //表示屏幕上显示的数的最后一位是否为小数点
     boolean beginOfNum = true;  //表示接下来输入的数是否为新的数（用于判断直接输入小数点是否直接置为”0.“）
@@ -43,15 +43,20 @@ public class MainActivity extends AppCompatActivity {
     }
     public void deal_ispoint() {  //末尾是小数点，并且没有数字再输入时，把它舍去
         String myString = tvResult.getText().toString();
-        myString = myString+  ".";
+        myString = myString.substring(0,myString.length()-1);
         tvResult.setText(myString);
         isPoint = false;
+    }
+    public void toBeInt(){  //输出结果出现x.0的情况
+        String myStr = tvResult.getText().toString();
+        if(myStr.length() > 1 && myStr.substring(myStr.length()-2).equals(".0"))
+            tvResult.setText(myStr.substring(0,myStr.length()-2));
     }
     public void switchEqual(int op1){  //执行+、-、*、/运算
         double result = 0;
         switch (op1) {
             case 1:
-                result = Double.parseDouble(this.num1) + Double.parseDouble(this.num2);
+                result = Double.parseDouble(num1) + Double.parseDouble(num2);
                 break;
             case 2:
                 result = Double.parseDouble(num1) - Double.parseDouble(num2);
@@ -73,11 +78,13 @@ public class MainActivity extends AppCompatActivity {
         }
         num3 = Double.toString(result);
         tvResult.setText(num3);
+        toBeInt();
     }
     public void equal(int op1){  // (=)运算符
-        if(this.num1 == null) return;
+        toBeInt();
+        if(num1 == null) return;
         if(isPoint) deal_ispoint();
-        this.num2 = tvResult.getText().toString();
+        num2 = tvResult.getText().toString();
         switchEqual(op1);
         isClickEqu = true;
         beginOfNum = true;
@@ -88,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View view) {  //所有点击事件
             switch (view.getId()) {
                 case R.id.tet0:
-                    if (tvResult.getText().toString() == "0")  //若为0，则不能继续在后面添加0
+                    if (tvResult.getText().toString().equals("0"))  //若为0，则不能继续在后面添加0
                         return;
                 case R.id.tet1:
                 case R.id.tet2:
@@ -114,19 +121,30 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.del:  //删除
                     if (isError || isClickEqu) return;  //不能删除结果。并且1/0情况按键无用
+                    if(Double.parseDouble(tvResult.getText().toString()) == 0 && isPoint)
+                        tvResult.setText("0");
                     String myStr = tvResult.getText().toString();
-                    if (myStr.length() > 1)  //正常删除
+                    if(myStr.length() == 2 && myStr.contains("-")){
+                        tvResult.setText("0");
+                        beginOfNum = true;
+                    }
+                    else if (myStr.length() > 1)  //正常删除
                         tvResult.setText(myStr.substring(0, myStr.length() - 1));
                     else {  //删除最后一位时，归0
                         tvResult.setText("0");
                         beginOfNum = true;
                     }
+                    myStr = tvResult.getText().toString();
+                    if(myStr.substring(myStr.length()-1).equals("."))
+                        isPoint = true;
+                    else isPoint = false;
                     break;
                 case R.id.C:  //全部清零
                     tvResult.setText("0");
                     num1 = null;
                     num2 = null;
                     num3 = null;
+                    op1 = op2 = -1;
                     isError = false;
                     isClickEqu = false;
                     beginOfNum = true;
@@ -136,55 +154,67 @@ public class MainActivity extends AppCompatActivity {
                     tvResult.setText("0");
                     beginOfNum = true;
                     isClickEqu = false;
-                    op2 = -1;
+                    num3 = "0";
+                    op3 = 1;
                     break;
                 case R.id.add:  // （+）运算符
                     if (isError) return;  // 1/0情况按键无用
                     if (isPoint) deal_ispoint();  // 操作数最后一位为小数点时，舍弃
-                    if (beginOfNum) num1 = null;  //在第一次调用运算符时（即只有一个操作数），num1为null可使之后（=）的调用跳过
+                    if (beginOfNum && op3 == 0) num1 = null;  //在第一次调用运算符时（即只有一个操作数），num1为null可使之后（=）的调用跳过
                     equal(op1);  //每一次都调用（=），可以使每一步的结果都立即显示在屏幕上
                     num1 = tvResult.getText().toString();
                     op1 = 1;
                     op2 = 1;
+                    op3 = 0;
                     beginOfNum = true;
                     break;
                 case R.id.reduce:  // （-）运算符 之后同上
                     if (isError) return;
                     if (isPoint) deal_ispoint();
-                    if (beginOfNum) num1 = null;
+                    if(Double.parseDouble(tvResult.getText().toString()) == 0)
+                        tvResult.setText("0");
+                    if (beginOfNum && op3 == 0) num1 = null;
                     equal(op1);
                     num1 = tvResult.getText().toString();
                     op1 = 2;
                     op2 = 2;
+                    op3 = 0;
                     beginOfNum = true;
                     break;
                 case R.id.plus:  //  （*）运算符 之后同上
                     if (isError) return;
                     if (isPoint) deal_ispoint();
-                    if (beginOfNum) num1 = null;
+                    if(Double.parseDouble(tvResult.getText().toString()) == 0)
+                        tvResult.setText("0");
+                    if (beginOfNum && op3 == 0) num1 = null;
                     equal(op1);
                     num1 = tvResult.getText().toString();
                     op1 = 3;
                     op2 = 3;
+                    op3 = 0;
                     beginOfNum = true;
                     break;
                 case R.id.divis:  //  （/）运算符 之后同上
                     if (isError) return;
                     if (isPoint) deal_ispoint();
-                    if (beginOfNum) num1 = null;
+                    if(Double.parseDouble(tvResult.getText().toString()) == 0)
+                        tvResult.setText("0");
+                    if (beginOfNum && op3 == 0) num1 = null;
                     equal(op1);
                     num1 = tvResult.getText().toString();
                     op1 = 4;
                     op2 = 4;
+                    op3 = 0;
                     beginOfNum = true;
                     break;
                 case R.id.oppo:  //取反
-                    if (isError) return;  //  1/0错误情况
+                    if(isError) return;  //  1/0错误情况
                     String strOppo = tvResult.getText().toString();
+                    if(strOppo == "0") return;
                     if (strOppo.contains("-")) strOppo = strOppo.substring(1);  //  判断当前值的正负
                     else strOppo = "-" + strOppo;
                     tvResult.setText(strOppo);
-                    isClickEqu = true;
+                    toBeInt();
                     break;
                 case R.id.x2:  //平方  之后同上
                     if (isError) return;
@@ -194,6 +224,8 @@ public class MainActivity extends AppCompatActivity {
                     x2 = Double.parseDouble(strX2);
                     x2 = x2 * x2;
                     tvResult.setText(Double.toString(x2));
+                    toBeInt();
+                    beginOfNum = true;
                     isClickEqu = true;
                     break;
                 case R.id.sign:  //根号 之后同上
@@ -204,6 +236,8 @@ public class MainActivity extends AppCompatActivity {
                     sign = Double.parseDouble(strSign);
                     sign = Math.sqrt(sign);
                     tvResult.setText(Double.toString(sign));
+                    toBeInt();
+                    beginOfNum = true;
                     isClickEqu = true;
                     break;
                 case R.id.divisx:  //取倒数
@@ -220,6 +254,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     divisx = 1 / divisx;
                     tvResult.setText(Double.toString(divisx));
+                    toBeInt();
+                    beginOfNum = true;
                     isClickEqu = true;
                     break;
                 case R.id.point:  //小数点
@@ -229,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
                         tvResult.setText("0.");
                         beginOfNum = false;
                         isClickEqu = false;
+                        isPoint =true;
                         return;
                     }
                     String myStrPoint = tvResult.getText().toString();
@@ -236,9 +273,14 @@ public class MainActivity extends AppCompatActivity {
                     tvResult.setText(myStrPoint);
                     isPoint = true;
                     isClickEqu = false;
+                    beginOfNum = false;
                     break;
                 case R.id.equal:  // 手动按下的（=）
                     if (isError) return;  // 1/0的情况
+                    toBeInt();
+                    if(isPoint) deal_ispoint();
+                    isClickEqu = true;
+                    beginOfNum = true;
                     if (op2 == 0 && num3 != null) {  // （数字）+（+、-、*、/）+（=）+（=）+（=）的情况
                         double result = Double.parseDouble(num3);
                         switch (op1) {
@@ -257,6 +299,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         num3 = Double.toString(result);
                         tvResult.setText(num3);
+                        toBeInt();
                         op2 = 0;
                         isClickEqu = true;
                         beginOfNum = true;
