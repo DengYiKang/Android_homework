@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     boolean isPoint = false;  //表示屏幕上显示的数的最后一位是否为小数点
     boolean beginOfNum = true;  //表示接下来输入的数是否为新的数（用于判断直接输入小数点是否直接置为”0.“）
     boolean isError = false;  //表示1/0的错误情况
+    boolean isZero = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         isPoint = false;
         isError = false;
         tvResult.setText("0");
+        isZero = true;
     }
     public boolean hadPoint(){  //判断是否已经有小数点
         String myString = tvResult.getText().toString();
@@ -121,9 +123,11 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.tet8:
                 case R.id.tet9:
                     if(isError) deal_error();  //发生1/0的错误
+                    if(tvResult.getText().toString().equals("0"))
+                        isZero = true;
                     isPoint = false;
                     Button bt = (Button) view;
-                    if(beginOfNum){  //新的操作数
+                    if(beginOfNum || isZero){  //新的操作数
                         tvResult.setText(bt.getText().toString());
                         isClickEqu = false;
                     }
@@ -132,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     beginOfNum = false;
                     op2 = -1;
+                    isZero = false;
                     break;
                 case R.id.del:  //删除
                     if (isClickEqu) return;  //不能删除结果。
@@ -156,6 +161,8 @@ public class MainActivity extends AppCompatActivity {
                     if(myStr.substring(myStr.length()-1).equals("."))
                         isPoint = true;
                     else isPoint = false;
+                    if(tvResult.getText().toString().equals("0"))
+                        isZero = true;
                     break;
                 case R.id.C:  //全部清零
                     tvResult.setText("0");
@@ -167,12 +174,14 @@ public class MainActivity extends AppCompatActivity {
                     isClickEqu = false;
                     beginOfNum = true;
                     isPoint = false;
+                    isZero = true;
                     break;
                 case R.id.CE:  //清空当前操作数
                     if (isError) deal_error() ;
                     tvResult.setText("0");
                     beginOfNum = true;
                     isClickEqu = false;
+                    isZero = true;
                     num3 = "0";
                     op3 = 1;
                     break;
@@ -284,6 +293,7 @@ public class MainActivity extends AppCompatActivity {
                         beginOfNum = false;
                         isClickEqu = false;
                         isPoint =true;
+                        isZero = false;
                         return;
                     }
                     String myStrPoint = tvResult.getText().toString();
@@ -292,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
                     isPoint = true;
                     isClickEqu = false;
                     beginOfNum = false;
+                    isZero = false;
                     break;
                 case R.id.equal:  // 手动按下的（=）
                     if (isError) {
