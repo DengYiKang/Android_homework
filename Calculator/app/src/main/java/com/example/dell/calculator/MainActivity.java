@@ -313,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
                     format();
                     isClickEqu = true;
                     beginOfNum = true;
-                    if (op2 == 0 && num3 != null) {  // （数字）+（+、-、*、/）+（=）+（=）+（=）的情况
+                    if (op2 == 0 && num3 != null && num2 != null) {  // （数字）+（+、-、*、/）+（=）+（=）+（=）的情况
                         double result = Double.parseDouble(num3);
                         switch (op1) {
                             case 1:
